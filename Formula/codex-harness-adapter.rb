@@ -2,14 +2,9 @@
 class CodexHarnessAdapter < Formula
   desc "Use the Codex desktop app to drive Claude Code and Pi over local SSH"
   homepage "https://github.com/slovx2/codex-harness-adapter"
-  url "https://github.com/slovx2/codex-harness-adapter/archive/refs/tags/v0.4.0.tar.gz"
-  sha256 "605ce46e885600c277f28d862a8f5c7c024cef3d5f621d2a065d66dda22a118b"
+  url "https://github.com/slovx2/codex-harness-adapter/archive/refs/tags/v0.4.1.tar.gz"
+  sha256 "a271db92efa291ce5358bf6e68292cdcf59aced77bd0f1e4eca53a0cd4eca3f8"
   license "MIT"
-
-  bottle do
-    root_url "https://github.com/slovx2/homebrew-tap/releases/download/codex-harness-adapter-0.4.0"
-    sha256 cellar: :any_skip_relocation, arm64_tahoe: "3e8256bd52363ac6bbdeca8c915f76e8e7d5796c29160761f8d9cea9eb0441e7"
-  end
 
   depends_on "go" => :build
   depends_on :macos
@@ -35,7 +30,9 @@ class CodexHarnessAdapter < Formula
     rm_r Dir["packages/pi/node_modules/**/prebuilds/#{other}"]
 
     libexec.install "bin", "packages", "scripts", "protocol", "package.json", "node_modules"
-    bin.install_symlink libexec/"bin/codex-harness-adapter"
+    # 包装脚本把 node@24 放到 PATH 最前，doctor 等命令无需 --node。
+    (bin/"codex-harness-adapter").write_env_script libexec/"bin/codex-harness-adapter",
+                                                   PATH: "#{formula_opt_bin("node@24")}:$PATH"
     prefix.install "LICENSE", "THIRD_PARTY_NOTICES.md"
   end
 
@@ -47,11 +44,12 @@ class CodexHarnessAdapter < Formula
       查看 SSH 连接参数：
         codex-harness-adapter ssh-config
       Claude Code 或 Pi 需单独安装并登录；未安装的引擎只告警，不影响另一个。
+      环境变量（CHA_CLAUDE_*、PI_CLI、代理等）写入 ~/.codex-harness-adapter/env，每行 KEY=VALUE，修改后重启服务。
     EOS
   end
 
   service do
-    run [opt_bin/"codex-harness-adapter", "start", "--node", formula_opt_bin("node@24")/"node"]
+    run [opt_bin/"codex-harness-adapter", "start"]
     keep_alive true
     environment_variables PATH: std_service_path_env
     log_path var/"log/codex-harness-adapter.log"
