@@ -25,6 +25,9 @@ class CodexHarnessAdapter < Formula
     cpu = Hardware::CPU.arm? ? "arm64" : "x64"
     system "node", "scripts/pi-runtime-platforms.mjs", "prune", "packages/pi/node_modules", "darwin", cpu
     system "node", "scripts/pi-runtime-platforms.mjs", "check", "packages/pi/node_modules", "darwin", cpu
+    # pi-tui 在包内同时附带两种 macOS 架构的原生模块，删除非本机架构的一份。
+    other = Hardware::CPU.arm? ? "darwin-x64" : "darwin-arm64"
+    rm_r Dir["packages/pi/node_modules/**/prebuilds/#{other}"]
 
     libexec.install "bin", "packages", "scripts", "protocol", "package.json", "node_modules"
     bin.install_symlink libexec/"bin/codex-harness-adapter"
