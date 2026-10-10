@@ -6,7 +6,6 @@ class CodexHarnessAdapter < Formula
   sha256 "ad5b47d046cc977ba93713d7c407059b3bd0edcd3565fadaa70eae480558474e"
   license "MIT"
 
-
   depends_on "go" => :build
   depends_on :macos
   depends_on "node@24"
