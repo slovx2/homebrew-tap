@@ -2,14 +2,9 @@
 class CodexHarnessAdapter < Formula
   desc "Use the Codex desktop app to drive Claude Code and Pi over local SSH"
   homepage "https://github.com/slovx2/codex-harness-adapter"
-  url "https://github.com/slovx2/codex-harness-adapter/archive/refs/tags/v0.4.4.tar.gz"
-  sha256 "059048de403ffd5b0c4c9d9ed2906a9e7483969c115849a270ba98cf21869487"
+  url "https://github.com/slovx2/codex-harness-adapter/archive/refs/tags/v0.5.0.tar.gz"
+  sha256 "14a7f3dc99ab04091689b865ae509b7cceb3c722aeaed6d0e5eb43c91e2dc37a"
   license "MIT"
-
-  bottle do
-    root_url "https://github.com/slovx2/homebrew-tap/releases/download/codex-harness-adapter-0.4.4"
-    sha256 cellar: :any_skip_relocation, arm64_tahoe: "0b6410be5da6551e19785c949eaeb5ef180a1d6b6a18414a5b3a31f06a01d213"
-  end
 
   depends_on "go" => :build
   depends_on :macos
@@ -21,18 +16,18 @@ class CodexHarnessAdapter < Formula
     system "npm", "ci", *npm_flags
     system "npm", "ci", "--prefix", "packages/claude", *npm_flags
     system "npm", "ci", "--prefix", "packages/pi", *npm_flags
+    system "npm", "ci", "--prefix", "packages/dsh", *npm_flags
     system "npm", "run", "build"
-    # Claude SDK 的可选平台包自带 CLI，适配器只使用用户安装的 claude；Pi 的可选依赖需保留。
+    # Claude SDK 的可选平台包自带 CLI，适配器只使用用户安装的 claude。
     system "npm", "prune", "--omit=dev", *npm_flags
     system "npm", "prune", "--omit=dev", "--omit=optional", "--prefix", "packages/claude", *npm_flags
+    # Pi 本体只是开发依赖（类型与测试），运行时使用用户安装的 pi；裁剪后只留适配器自带的插件。
     system "npm", "prune", "--omit=dev", "--prefix", "packages/pi", *npm_flags
-    # Pi 依赖会带上所有平台的 esbuild，只保留本机平台。
-    cpu = Hardware::CPU.arm? ? "arm64" : "x64"
-    system "node", "scripts/pi-runtime-platforms.mjs", "prune", "packages/pi/node_modules", "darwin", cpu
-    system "node", "scripts/pi-runtime-platforms.mjs", "check", "packages/pi/node_modules", "darwin", cpu
-    # pi-tui 在包内同时附带两种 macOS 架构的原生模块，删除非本机架构的一份。
-    other = Hardware::CPU.arm? ? "darwin-x64" : "darwin-arm64"
-    rm_r Dir["packages/pi/node_modules/**/prebuilds/#{other}"]
+    # prune 会留下空的作用域目录，按内容判断。
+    odie "Pi 本体不应随适配器分发" unless Dir["packages/pi/node_modules/@earendil-works/*"].empty?
+    # 实验性的 DeepSeek Harness 入口同样只带适配器自己的依赖，dsh 本体由用户安装。
+    system "npm", "prune", "--omit=dev", "--prefix", "packages/dsh", *npm_flags
+    odie "dsh 本体不应随适配器分发" unless Dir["packages/dsh/node_modules/@deepseek-ai/*"].empty?
 
     libexec.install "bin", "packages", "scripts", "protocol", "package.json", "node_modules"
     # 包装脚本把 node@24 放到 PATH 最前，doctor 等命令无需 --node。
@@ -49,7 +44,10 @@ class CodexHarnessAdapter < Formula
       查看 SSH 连接参数：
         codex-harness-adapter ssh-config
       Claude Code 或 Pi 需单独安装并登录；未安装的引擎只告警，不影响另一个。
-      环境变量（CHA_CLAUDE_*、PI_CLI、代理等）写入 ~/.codex-harness-adapter/env，每行 KEY=VALUE，修改后重启服务。
+      Pi 需用 npm 安装（npm install -g @earendil-works/pi-coding-agent），适配器直接加载这份安装。
+      实验性：装有 DeepSeek Harness（npm install -g @deepseek-ai/dsh）时会一并启动 dsh 入口（端口 7333），没装时不提示；
+      密钥 DEEPSEEK_API_KEY 写入下面的环境文件。
+      环境变量（CHA_CLAUDE_*、PI_CLI、CHA_DSH_CLI、代理等）写入 ~/.codex-harness-adapter/env，每行 KEY=VALUE，修改后重启服务。
     EOS
   end
 
@@ -65,5 +63,8 @@ class CodexHarnessAdapter < Formula
     assert_match "用法", shell_output("#{bin}/codex-harness-adapter --help")
     assert_path_exists libexec/"packages/claude/dist/claude/src/adapter.mjs"
     assert_path_exists libexec/"packages/pi/dist/pi/src/adapter.mjs"
+    refute_path_exists libexec/"packages/pi/node_modules/@earendil-works/pi-coding-agent"
+    assert_path_exists libexec/"packages/dsh/dist/dsh/src/adapter.mjs"
+    refute_path_exists libexec/"packages/dsh/node_modules/@deepseek-ai/dsh"
   end
 end
