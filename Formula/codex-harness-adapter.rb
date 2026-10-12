@@ -1,9 +1,9 @@
 # 从源码构建，运行时使用 Homebrew 的 node@24；后台常驻由 brew services 管理。
 class CodexHarnessAdapter < Formula
   desc "Use the Codex desktop app to drive Claude Code and Pi over local SSH"
-  homepage "https://github.com/slovx2/codex-harness-adapter"
-  url "https://github.com/slovx2/codex-harness-adapter/archive/refs/tags/v0.5.1.tar.gz"
-  sha256 "5cfb7aa48179e01e3448583dc915cc4d187ab46dc6ef2b37b5fc3458e2e7a6bc"
+  homepage "https://github.com/slovx2/litch"
+  url "https://github.com/slovx2/litch/archive/refs/tags/v0.5.1.tar.gz"
+  sha256 "5415bf17f48f623d317fb1583f3f7a7fda25bd42b6bfd4ab4eaeac7669cddfca"
   license "MIT"
 
   bottle do
@@ -65,7 +65,7 @@ class CodexHarnessAdapter < Formula
   end
 
   test do
-    assert_match "用法", shell_output("#{bin}/codex-harness-adapter --help")
+    assert_match "start|init|serve|ssh-config|doctor", shell_output("#{bin}/codex-harness-adapter --help")
     assert_path_exists libexec/"packages/claude/dist/claude/src/adapter.mjs"
     assert_path_exists libexec/"packages/pi/dist/pi/src/adapter.mjs"
     refute_path_exists libexec/"packages/pi/node_modules/@earendil-works/pi-coding-agent"

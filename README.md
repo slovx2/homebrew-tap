@@ -1,6 +1,6 @@
 # slovx2/tap
 
-Homebrew tap for [codex-harness-adapter](https://github.com/slovx2/codex-harness-adapter).
+Homebrew tap for [codex-harness-adapter](https://github.com/slovx2/litch/blob/main/ADAPTER.md).
 
 ```sh
 brew install slovx2/tap/codex-harness-adapter
