@@ -2,14 +2,9 @@
 class CodexHarnessAdapter < Formula
   desc "Use the Codex desktop app to drive Claude Code and Pi over local SSH"
   homepage "https://github.com/slovx2/litch"
-  url "https://github.com/slovx2/litch/archive/refs/tags/v0.5.1.tar.gz"
-  sha256 "5415bf17f48f623d317fb1583f3f7a7fda25bd42b6bfd4ab4eaeac7669cddfca"
+  url "https://github.com/slovx2/litch/archive/refs/tags/v0.6.0.tar.gz"
+  sha256 "0dd9fd0603c74835d9ef6be8f165b274d8004fd9ce7b0fbf1157d76cc4a2e3fa"
   license "MIT"
-
-  bottle do
-    root_url "https://github.com/slovx2/homebrew-tap/releases/download/codex-harness-adapter-0.5.1"
-    sha256 cellar: :any_skip_relocation, arm64_tahoe: "c6ea4cefeaae1bb71e8400d90de745cad0038f5b7ca8439a2dc0f80baf235969"
-  end
 
   depends_on "go" => :build
   depends_on :macos
@@ -71,5 +66,7 @@ class CodexHarnessAdapter < Formula
     refute_path_exists libexec/"packages/pi/node_modules/@earendil-works/pi-coding-agent"
     assert_path_exists libexec/"packages/dsh/dist/dsh/src/adapter.mjs"
     refute_path_exists libexec/"packages/dsh/node_modules/@deepseek-ai/dsh"
+    assert_path_exists libexec/"packages/device/dist/device/src/main.mjs"
+    assert_match version.to_s, shell_output("#{bin}/codex-harness-adapter version")
   end
 end
