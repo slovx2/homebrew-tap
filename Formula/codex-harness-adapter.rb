@@ -2,14 +2,9 @@
 class CodexHarnessAdapter < Formula
   desc "Use the Codex desktop app to drive Claude Code and Pi over local SSH"
   homepage "https://github.com/slovx2/litch"
-  url "https://github.com/slovx2/litch/archive/refs/tags/v0.9.0.tar.gz"
-  sha256 "da6d36cfa54471223c1804491c5f4403481b1a349005536252926e9ae5f9f53a"
+  url "https://github.com/slovx2/litch/archive/refs/tags/v0.10.0.tar.gz"
+  sha256 "9e1924bd8fd72e9efc9dc17a2a1bf3b695eb08f6e557ff79be22d132a6017a3c"
   license "MIT"
-
-  bottle do
-    root_url "https://github.com/slovx2/homebrew-tap/releases/download/codex-harness-adapter-0.9.0"
-    sha256 cellar: :any_skip_relocation, arm64_tahoe: "77ab10f55d025a0db8ba814682bc161eb8304354938e8a7eb08412139fbf6cbe"
-  end
 
   depends_on "go" => :build
   depends_on :macos
@@ -43,6 +38,9 @@ class CodexHarnessAdapter < Formula
     # 包装脚本把 node@24 放到 PATH 最前，doctor 等命令无需 --node。
     (bin/"codex-harness-adapter").write_env_script libexec/"bin/codex-harness-adapter",
                                                    PATH: "#{formula_opt_bin("node@24")}:$PATH"
+    # 短名 litch-machine 就是 machine 子命令（远程会话经 Litch 操作桌面那台电脑），按调用时的名字认出来。
+    (bin/"litch-machine").write_env_script libexec/"bin/litch-machine",
+                                           PATH: "#{formula_opt_bin("node@24")}:$PATH"
     prefix.install "LICENSE", "THIRD_PARTY_NOTICES.md"
   end
 
@@ -82,5 +80,7 @@ class CodexHarnessAdapter < Formula
     assert_path_exists libexec/"packages/acp/dist/acp/src/adapter.mjs"
     assert_path_exists libexec/"packages/device/dist/device/src/main.mjs"
     assert_match version.to_s, shell_output("#{bin}/codex-harness-adapter version")
+    assert_match "litch-machine: ",
+                 shell_output("CHA_LANG=en LITCH_DEVICE_SOCKET=#{testpath}/none.sock #{bin}/litch-machine --help")
   end
 end
