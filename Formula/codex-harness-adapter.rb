@@ -2,14 +2,9 @@
 class CodexHarnessAdapter < Formula
   desc "Use the Codex desktop app to drive Claude Code and Pi over local SSH"
   homepage "https://github.com/slovx2/litch"
-  url "https://github.com/slovx2/litch/archive/refs/tags/v0.14.0.tar.gz"
-  sha256 "e71cd6914f7303d7553cf7f02f99ee0f42881637ce629ad0f29839182f72d6d1"
+  url "https://github.com/slovx2/litch/archive/refs/tags/v0.16.0.tar.gz"
+  sha256 "a82e597a2c874807269745896cda089a12fa58406ecca741bcb6ff92b5f43efb"
   license "MIT"
-
-  bottle do
-    root_url "https://github.com/slovx2/homebrew-tap/releases/download/codex-harness-adapter-0.14.0"
-    sha256 cellar: :any_skip_relocation, arm64_tahoe: "2206b4dda5c5c184d2c4399a53b3792d6cbf7f32342cfb99edb913464a2d43f3"
-  end
 
   depends_on "go" => :build
   depends_on :macos
@@ -39,6 +34,10 @@ class CodexHarnessAdapter < Formula
     system "npm", "prune", "--omit=dev", "--prefix", "packages/opencode", *npm_flags
     system "npm", "prune", "--omit=dev", "--prefix", "packages/acp", *npm_flags
 
+    # Claude 入口的守护进程（Go）各平台都编了一份，只留本机这一份；别的架构 audit 不让装。
+    guard = "packages/claude/dist/claude/src/process-guard"
+    Dir["#{guard}/*"].each { |dir| rm_r dir if File.basename(dir) != guard_platform }
+
     libexec.install "bin", "packages", "scripts", "protocol", "package.json", "node_modules"
     # 包装脚本把 node@24 放到 PATH 最前，doctor 等命令无需 --node。
     (bin/"codex-harness-adapter").write_env_script libexec/"bin/codex-harness-adapter",
@@ -47,6 +46,10 @@ class CodexHarnessAdapter < Formula
     (bin/"litch-machine").write_env_script libexec/"bin/litch-machine",
                                            PATH: "#{formula_opt_bin("node@24")}:$PATH"
     prefix.install "LICENSE", "THIRD_PARTY_NOTICES.md"
+  end
+
+  def guard_platform
+    "darwin-#{Hardware::CPU.arm? ? "arm64" : "amd64"}"
   end
 
   def caveats
@@ -84,6 +87,8 @@ class CodexHarnessAdapter < Formula
     assert_path_exists libexec/"packages/opencode/dist/opencode/src/adapter.mjs"
     assert_path_exists libexec/"packages/acp/dist/acp/src/adapter.mjs"
     assert_path_exists libexec/"packages/device/dist/device/src/main.mjs"
+    guard = libexec/"packages/claude/dist/claude/src/process-guard"
+    assert_equal [guard_platform], guard.children.map { |dir| dir.basename.to_s }
     assert_match version.to_s, shell_output("#{bin}/codex-harness-adapter version")
     assert_match "litch-machine: ",
                  shell_output("CHA_LANG=en LITCH_DEVICE_SOCKET=#{testpath}/none.sock #{bin}/litch-machine --help")
