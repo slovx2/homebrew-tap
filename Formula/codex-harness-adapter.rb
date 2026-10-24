@@ -2,14 +2,9 @@
 class CodexHarnessAdapter < Formula
   desc "Use the Codex desktop app to drive Claude Code and Pi over local SSH"
   homepage "https://github.com/slovx2/litch"
-  url "https://github.com/slovx2/litch/archive/refs/tags/v0.20.0.tar.gz"
-  sha256 "640e20954e4a820057538507d5b8574020c1948cb9115ec4f57a884306717473"
+  url "https://github.com/slovx2/litch/archive/refs/tags/v0.21.0.tar.gz"
+  sha256 "debbb4dd93fe944019205cc7beb98fedd3df15e2e794e1f448df2c86e6125628"
   license "MIT"
-
-  bottle do
-    root_url "https://github.com/slovx2/homebrew-tap/releases/download/codex-harness-adapter-0.20.0"
-    sha256 cellar: :any_skip_relocation, arm64_tahoe: "c3a83bf6b960d076d2ff8cbbb656b39173c47a9b958cb4b8ce75e4bcc14e96dc"
-  end
 
   depends_on "go" => :build
   depends_on :macos
