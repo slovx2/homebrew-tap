@@ -2,14 +2,9 @@
 class CodexHarnessAdapter < Formula
   desc "Use the Codex desktop app to drive Claude Code and Pi over local SSH"
   homepage "https://github.com/slovx2/litch"
-  url "https://github.com/slovx2/litch/archive/refs/tags/v0.28.0.tar.gz"
-  sha256 "18d6a64dddbed99c51395bfafec2984e7b00c41ece21b5e6da4a30a764cba8fc"
+  url "https://github.com/slovx2/litch/archive/refs/tags/v0.28.1.tar.gz"
+  sha256 "bec5646031ea04aa5e4f8cf09c1d94eb12c1772207b5590e88108e68a6cc7536"
   license "MIT"
-
-  bottle do
-    root_url "https://github.com/slovx2/homebrew-tap/releases/download/codex-harness-adapter-0.28.0"
-    sha256 cellar: :any_skip_relocation, arm64_tahoe: "6fa10d19595227d6e676c7b90cec4cb12ad574453322725677f3a00789e15fd5"
-  end
 
   depends_on "go" => :build
   depends_on :macos
@@ -24,10 +19,6 @@ class CodexHarnessAdapter < Formula
     system "npm", "ci", "--prefix", "packages/dsh", *npm_flags
     system "npm", "ci", "--prefix", "packages/opencode", *npm_flags
     system "npm", "ci", "--prefix", "packages/acp", *npm_flags
-    # TUI helper 的构建要随包附上 Go 的许可，默认取 GOROOT/LICENSE；Homebrew 的 go 把它放在 keg 根目录。
-    go_license = [formula_opt_libexec("go")/"LICENSE", formula_opt_prefix("go")/"LICENSE"].find(&:exist?)
-    odie "找不到 Go 的许可文件" if go_license.nil?
-    inreplace "scripts/build-tui-helper.mjs", "join(goroot, 'LICENSE')", "'#{go_license}'"
     system "npm", "run", "build"
     # Claude SDK 的可选平台包自带 CLI，适配器只使用用户安装的 claude。
     system "npm", "prune", "--omit=dev", *npm_flags
@@ -104,6 +95,7 @@ class CodexHarnessAdapter < Formula
     tui = libexec/"packages/claude/dist/claude/src/tui-helper"
     assert_equal [guard_platform, "licenses"], tui.children.map { |dir| dir.basename.to_s }.sort
     assert_path_exists tui/"licenses/github.com/yetone/magpie/LICENSE"
+    assert_path_exists tui/"licenses/GO-LICENSE"
     # 权限桥连不上时 helper 退出 2
     shell_output("#{tui}/#{guard_platform}/claude-tui-helper hook http://127.0.0.1:1/hook token </dev/null", 2)
     # Chrome 原生宿主是 chrome-host 子命令，配置不存在时报错退出
