@@ -2,14 +2,9 @@
 class CodexHarnessAdapter < Formula
   desc "Use the Codex desktop app to drive Claude Code and Pi over local SSH"
   homepage "https://github.com/slovx2/litch"
-  url "https://github.com/slovx2/litch/archive/refs/tags/v0.27.0.tar.gz"
-  sha256 "faeeda4debb9dc258e63744cb91058df362396ab3fd8f410e8c5819eb3f0bb77"
+  url "https://github.com/slovx2/litch/archive/refs/tags/v0.28.0.tar.gz"
+  sha256 "18d6a64dddbed99c51395bfafec2984e7b00c41ece21b5e6da4a30a764cba8fc"
   license "MIT"
-
-  bottle do
-    root_url "https://github.com/slovx2/homebrew-tap/releases/download/codex-harness-adapter-0.27.0"
-    sha256 cellar: :any_skip_relocation, arm64_tahoe: "8ec9550485812b34691eff25190dcc8abaa8444db6b871d93928ec99467c878f"
-  end
 
   depends_on "go" => :build
   depends_on :macos
@@ -24,6 +19,10 @@ class CodexHarnessAdapter < Formula
     system "npm", "ci", "--prefix", "packages/dsh", *npm_flags
     system "npm", "ci", "--prefix", "packages/opencode", *npm_flags
     system "npm", "ci", "--prefix", "packages/acp", *npm_flags
+    # TUI helper 的构建要随包附上 Go 的许可，默认取 GOROOT/LICENSE；Homebrew 的 go 把它放在 keg 根目录。
+    go_license = [formula_opt_libexec("go")/"LICENSE", formula_opt_prefix("go")/"LICENSE"].find(&:exist?)
+    odie "找不到 Go 的许可文件" if go_license.nil?
+    inreplace "scripts/build-tui-helper.mjs", "join(goroot, 'LICENSE')", "'#{go_license}'"
     system "npm", "run", "build"
     # Claude SDK 的可选平台包自带 CLI，适配器只使用用户安装的 claude。
     system "npm", "prune", "--omit=dev", *npm_flags
@@ -42,6 +41,9 @@ class CodexHarnessAdapter < Formula
     # Claude 入口的守护进程（Go）各平台都编了一份，只留本机这一份；别的架构 audit 不让装。
     guard = "packages/claude/dist/claude/src/process-guard"
     Dir["#{guard}/*"].each { |dir| rm_r dir if File.basename(dir) != guard_platform }
+    # Claude 的 TUI 驱动后端（magpie helper，Go）同样六平台各一份，只留本机这份和随附的许可材料。
+    tui = "packages/claude/dist/claude/src/tui-helper"
+    Dir["#{tui}/*"].each { |dir| rm_r dir unless [guard_platform, "licenses"].include?(File.basename(dir)) }
 
     libexec.install "bin", "packages", "scripts", "protocol", "package.json", "node_modules"
     # 包装脚本把 node@24 放到 PATH 最前，doctor 等命令无需 --node。
@@ -94,6 +96,15 @@ class CodexHarnessAdapter < Formula
     assert_path_exists libexec/"packages/device/dist/device/src/main.mjs"
     guard = libexec/"packages/claude/dist/claude/src/process-guard"
     assert_equal [guard_platform], guard.children.map { |dir| dir.basename.to_s }
+    tui = libexec/"packages/claude/dist/claude/src/tui-helper"
+    assert_equal [guard_platform, "licenses"], tui.children.map { |dir| dir.basename.to_s }.sort
+    assert_path_exists tui/"licenses/github.com/yetone/magpie/LICENSE"
+    # 权限桥连不上时 helper 退出 2
+    shell_output("#{tui}/#{guard_platform}/claude-tui-helper hook http://127.0.0.1:1/hook token </dev/null", 2)
+    # Chrome 原生宿主是 chrome-host 子命令，配置不存在时报错退出
+    assert_match "Chrome native host configuration is unavailable",
+                 shell_output("CHA_LANG=en #{bin}/codex-harness-adapter chrome-host --config #{testpath}/none.json " \
+                              "chrome-extension://fakgembkgnmeknpaegnneneockbjhaai/ 2>&1", 1)
     assert_match version.to_s, shell_output("#{bin}/codex-harness-adapter version")
     assert_match "litch-machine: ",
                  shell_output("CHA_LANG=en LITCH_DEVICE_SOCKET=#{testpath}/none.sock #{bin}/litch-machine --help")
