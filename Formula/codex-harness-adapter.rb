@@ -6,6 +6,11 @@ class CodexHarnessAdapter < Formula
   sha256 "d2dcf664d1237ab8dce6ea21e5441fdc3c7bcff22f0b3475f7e19bd3ca14cb74"
   license "MIT"
 
+  bottle do
+    root_url "https://github.com/slovx2/homebrew-tap/releases/download/codex-harness-adapter-0.28.2"
+    sha256 cellar: :any_skip_relocation, arm64_tahoe: "cf19a15e6d9ef3cc6ba61be9901610aef61c77309368926079aa8d7a533aee8f"
+  end
+
   depends_on "go" => :build
   depends_on :macos
   depends_on "node@24"
