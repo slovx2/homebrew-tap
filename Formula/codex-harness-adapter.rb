@@ -2,14 +2,9 @@
 class CodexHarnessAdapter < Formula
   desc "Use the Codex desktop app to drive Claude Code and Pi over local SSH"
   homepage "https://github.com/slovx2/litch"
-  url "https://github.com/slovx2/litch/archive/refs/tags/v0.31.1.tar.gz"
-  sha256 "3b0e2c6eab7f326fd6fb3286b251f00d53d00268d4218b1d1b148fb7389a02e2"
+  url "https://github.com/slovx2/litch/archive/refs/tags/v0.32.0.tar.gz"
+  sha256 "a4a61284d593da9af46aac618bbf5d0c0dca0a5ec213ca3fb61e50bcf2f2dbc6"
   license "MIT"
-
-  bottle do
-    root_url "https://github.com/slovx2/homebrew-tap/releases/download/codex-harness-adapter-0.31.1"
-    sha256 cellar: :any_skip_relocation, arm64_tahoe: "68de8cc14a1226f0b24cfe4082060960d8de94354ca42817fcec0deb81fe7bd4"
-  end
 
   depends_on "go" => :build
   depends_on :macos
@@ -24,6 +19,7 @@ class CodexHarnessAdapter < Formula
     system "npm", "ci", "--prefix", "packages/dsh", *npm_flags
     system "npm", "ci", "--prefix", "packages/opencode", *npm_flags
     system "npm", "ci", "--prefix", "packages/acp", *npm_flags
+    system "npm", "ci", "--prefix", "packages/antigravity", *npm_flags
     system "npm", "run", "build"
     # Claude SDK 的可选平台包自带 CLI，适配器只使用用户安装的 claude。
     system "npm", "prune", "--omit=dev", *npm_flags
@@ -38,6 +34,7 @@ class CodexHarnessAdapter < Formula
     # 实验性的 OpenCode 入口和通用 ACP 入口：只带适配器自己的依赖，OpenCode、Gemini CLI、Qwen Code 本体由用户安装。
     system "npm", "prune", "--omit=dev", "--prefix", "packages/opencode", *npm_flags
     system "npm", "prune", "--omit=dev", "--prefix", "packages/acp", *npm_flags
+    system "npm", "prune", "--omit=dev", "--prefix", "packages/antigravity", *npm_flags
 
     # Claude 入口的守护进程（Go）各平台都编了一份，只留本机这一份；别的架构 audit 不让装。
     guard = "packages/claude/dist/claude/src/process-guard"
@@ -94,6 +91,7 @@ class CodexHarnessAdapter < Formula
     refute_path_exists libexec/"packages/dsh/node_modules/@deepseek-ai/dsh"
     assert_path_exists libexec/"packages/opencode/dist/opencode/src/adapter.mjs"
     assert_path_exists libexec/"packages/acp/dist/acp/src/adapter.mjs"
+    assert_path_exists libexec/"packages/antigravity/dist/antigravity/src/adapter.mjs"
     assert_path_exists libexec/"packages/device/dist/device/src/main.mjs"
     guard = libexec/"packages/claude/dist/claude/src/process-guard"
     assert_equal [guard_platform], guard.children.map { |dir| dir.basename.to_s }
