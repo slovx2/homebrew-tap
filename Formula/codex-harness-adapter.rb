@@ -2,14 +2,9 @@
 class CodexHarnessAdapter < Formula
   desc "Use the Codex desktop app to drive Claude Code and Pi over local SSH"
   homepage "https://github.com/slovx2/litch"
-  url "https://github.com/slovx2/litch/archive/refs/tags/v0.44.1.tar.gz"
-  sha256 "de86829a265328493b0ba7782d30e6d7a78c7b62667fb1dc38484cf88dc6f258"
+  url "https://github.com/slovx2/litch/archive/refs/tags/v0.45.0.tar.gz"
+  sha256 "648d5b799ed23bbf69da9b2cc7b688bd8ed2e959a0537f80c6fbe577c170579e"
   license "MIT"
-
-  bottle do
-    root_url "https://github.com/slovx2/homebrew-tap/releases/download/codex-harness-adapter-0.44.1"
-    sha256 cellar: :any_skip_relocation, arm64_tahoe: "b6a9b21f51c3d6a5dc022a76eaba63f9c4b729d3782434bc9e724cb38dce3491"
-  end
 
   depends_on "go" => :build
   depends_on :macos
@@ -97,7 +92,7 @@ class CodexHarnessAdapter < Formula
     assert_path_exists libexec/"packages/opencode/dist/opencode/src/adapter.mjs"
     assert_path_exists libexec/"packages/acp/dist/acp/src/adapter.mjs"
     assert_path_exists libexec/"packages/antigravity/dist/antigravity/src/adapter.mjs"
-    assert_path_exists libexec/"packages/device/dist/device/src/main.mjs"
+    assert_path_exists libexec/"packages/device/dist/packages/device/src/main.mjs"
     guard = libexec/"packages/claude/dist/claude/src/process-guard"
     assert_equal [guard_platform], guard.children.map { |dir| dir.basename.to_s }
     tui = libexec/"packages/claude/dist/claude/src/tui-helper"
