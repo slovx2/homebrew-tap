@@ -54,7 +54,8 @@ class CodexHarnessAdapter < Formula
   end
 
   def guard_platform
-    "darwin-#{Hardware::CPU.arm? ? "arm64" : "amd64"}"
+    arch = Hardware::CPU.arm? ? "arm64" : "amd64"
+    "darwin-#{arch}"
   end
 
   def caveats
